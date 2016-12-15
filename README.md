@@ -2,4 +2,4 @@
 A simple small c++ sphere ray tracer
 
 ### output
-![alt tag](rayTracedCircle.jpg)
+![alt tag](rayTracedCircle.png)
