@@ -8,7 +8,7 @@
 struct Vec3 {
     double x,y,z;
     
-    Vec3(double _x = 0, double _y = 0, double _z = 0)
+    explicit Vec3(double _x = 0, double _y = 0, double _z = 0)
     :
      x(_x),
      y(_y),
@@ -24,7 +24,7 @@ double dot(Vec3 const & v1, Vec3 const & v2) {
 struct Colour {
     int r,g,b;
     
-    Colour(int _r = 0, int _g = 0, int _b = 0)
+    explicit Colour(int _r = 0, int _g = 0, int _b = 0)
     :
      r(_r),
      g(_g),
@@ -45,7 +45,7 @@ struct Sphere {
     Colour  colour;
     double  radiusSquared; // precompute so don't have to calc per ray
     
-    Sphere(Vec3 const & _center = Vec3(0,0,0),Colour _colour = Colour(0,0,0), double _radius = 1 )
+    explicit Sphere(Vec3 const & _center = Vec3(0,0,0),Colour _colour = Colour(0,0,0), double _radius = 1 )
     :
       center(_center)
     , colour(_colour)
