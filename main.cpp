@@ -5,6 +5,11 @@
 #include <chrono>
 #include <string>
 
+// render time
+
+// 1450 ish for 1000 - base
+// 1329 ish for 1000 - added string lookup table
+
 struct Vec3 {
     double x,y,z;
     
@@ -22,7 +27,9 @@ double dot(Vec3 const & v1, Vec3 const & v2) {
 }
 
 struct Colour {
-    int r,g,b;
+    int r;
+    int g;
+    int b;
     
     explicit Colour(int _r = 0, int _g = 0, int _b = 0)
     :
@@ -41,8 +48,8 @@ struct Ray {
 };
 
 struct Sphere {
-    Vec3    center;
-    Colour  colour;
+    const Vec3    center;
+    const Colour  colour;
     double  radiusSquared; // precompute so don't have to calc per ray
     
     explicit Sphere(Vec3 const & _center = Vec3(0,0,0),Colour _colour = Colour(0,0,0), double _radius = 1 )
@@ -51,7 +58,7 @@ struct Sphere {
     , colour(_colour)
     , radiusSquared(_radius * _radius){}
     
-    bool intersect(Ray ray) {
+    inline bool intersect(Ray ray) const {
         Vec3 orms = ray.origin - center;
         double d = 2 * dot(orms,ray.direction);
         double disc = d * d - (4 * dot(orms,orms) - radiusSquared);
@@ -65,8 +72,9 @@ struct Sphere {
 int main() {
     std::cout.sync_with_stdio(false);
     const auto imgSize     = 600;
-    const auto numSpheres = 1'0000;
+    const auto numSpheres = 1000;
     Colour     pixels[imgSize][imgSize];
+    
     
     std::vector<Sphere> sphereList;
     sphereList.reserve(numSpheres);
@@ -82,26 +90,36 @@ int main() {
         sphereList.emplace_back(Vec3(x, y,0), Colour(r,g,b), radius);
     }
     
+    // intermediary buffer to store pixel data before blasting to file
     std::string memoryBuffer;
-    memoryBuffer.reserve(imgSize * imgSize * 3);
+    memoryBuffer.reserve((imgSize * imgSize) * 3);
     auto percentRendered = 0;
     auto startRender     = std::chrono::system_clock::now();
     
-    // ray trace all the spheres ever!
+    // lookup table to avoid expensive int to string conversion.
+    std::vector<std::string> intToStringTable;
+    intToStringTable.reserve(256);
+    
+    // generate  lookup table because typing it inline with a std::array would take years to type
+    for(int i = 0; i < 256; i++) {
+        intToStringTable.push_back(std::to_string(i));
+    }
+    
+    
+    Ray ray(Vec3(0,0,0));
+    
     std::cout << "All of the rays, all of the time.\nSphere Count: " << numSpheres << std::endl;
     for(auto y = 0; y < imgSize; ++y) {
         for(auto x = 0; x < imgSize; ++x) {
             
-            Ray ray(Vec3(x,y,0));
+            ray.origin = Vec3(x,y, 0);
             
             for(auto & s : sphereList) {
                 if(s.intersect(ray)) {
                     pixels[y][x] = s.colour;
                 }
             }
-            memoryBuffer += std::to_string(pixels[y][x].r) + '\n';
-            memoryBuffer += std::to_string(pixels[y][x].g) + '\n';
-            memoryBuffer += std::to_string(pixels[y][x].b) + '\n';
+            memoryBuffer += intToStringTable.at(pixels[y][x].r) + '\n' + intToStringTable.at(pixels[y][x].g) + '\n' + intToStringTable.at(pixels[y][x].b) + '\n';
         }
         percentRendered++;
         
